@@ -22,7 +22,16 @@
 
 class DesktopShell : public Shell {
 public:
+    enum class Corner {
+        TopLeft = 0,
+        TopRight = 1,
+        BottomLeft = 2,
+        BottomRight = 3
+    };
+
     DesktopShell(struct weston_compositor *ec);
+
+    void bindCornerEffect(Corner corner, Effect *effect);
 
 protected:
     virtual void init();
@@ -32,6 +41,7 @@ private:
     void bind(struct wl_client *client, uint32_t version, uint32_t id);
     void unbind(struct wl_resource *resource);
     void moveBinding(struct wl_seat *seat, uint32_t time, uint32_t button);
+    void motionBinding(struct wl_seat *seat, uint32_t time, wl_fixed_t x, wl_fixed_t y);
 
     void setBackground(struct wl_client *client, struct wl_resource *resource, struct wl_resource *output_resource,
                                              struct wl_resource *surface_resource);
@@ -40,6 +50,10 @@ private:
     void setLockSurface(struct wl_client *client, struct wl_resource *resource, struct wl_resource *surface_resource);
     void unlock(struct wl_client *client, struct wl_resource *resource);
     void setGrabSurface(struct wl_client *client, struct wl_resource *resource, struct wl_resource *surface_resource);
+
+    Effect *m_cornerEffects[4];
+    uint32_t m_lastMotionTime;
+    uint32_t m_enterHotZone;
 
     static void desktop_shell_set_background(struct wl_client *client, struct wl_resource *resource, struct wl_resource *output_resource,
                                              struct wl_resource *surface_resource);

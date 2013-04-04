@@ -71,6 +71,11 @@ public:
     Binding *bindAxis(uint32_t axis, enum weston_keyboard_modifier modifier,
                       void (T::*func)(struct wl_seat *seat, uint32_t time, uint32_t axis, wl_fixed_t value), T *obj);
 
+    Binding *bindMotion(enum weston_keyboard_modifier modifier, weston_motion_binding_handler_t handler, void *data);
+    template<class T>
+    Binding *bindMotion(enum weston_keyboard_modifier modifier,
+                      void (T::*func)(struct wl_seat *seat, uint32_t time, wl_fixed_t x, wl_fixed_t y), T *obj);
+
     void registerEffect(Effect *effect);
 
     void configureSurface(ShellSurface *surface, int32_t sx, int32_t sy, int32_t width, int32_t height);
@@ -185,6 +190,16 @@ Binding *Shell::bindAxis(uint32_t axis, enum weston_keyboard_modifier modifier,
         new MemberBinding<T, struct wl_seat *, uint32_t, uint32_t, wl_fixed_t>(obj, func);
     binding->m_binding = weston_compositor_add_axis_binding(m_compositor, axis, modifier,
                          MemberBinding<T, struct wl_seat *, uint32_t, uint32_t, wl_fixed_t>::handler, binding);
+    return binding;
+}
+
+template<class T>
+Binding *Shell::bindMotion(enum weston_keyboard_modifier modifier,
+                         void (T::*func)(struct wl_seat *seat, uint32_t time, wl_fixed_t x, wl_fixed_t y), T *obj) {
+    MemberBinding<T, struct wl_seat *, uint32_t, wl_fixed_t, wl_fixed_t> *binding =
+        new MemberBinding<T, struct wl_seat *, uint32_t, wl_fixed_t, wl_fixed_t>(obj, func);
+    binding->m_binding = weston_compositor_add_motion_binding(m_compositor, modifier,
+                         MemberBinding<T, struct wl_seat *, uint32_t, wl_fixed_t, wl_fixed_t>::handler, binding);
     return binding;
 }
 

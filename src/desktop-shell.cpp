@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <linux/input.h>
 
 #include <wayland-server.h>
@@ -34,7 +35,15 @@
 
 DesktopShell::DesktopShell(struct weston_compositor *ec)
             : Shell(ec)
+            , m_lastMotionTime(0)
+            , m_enterHotZone(0)
 {
+    memset(m_cornerEffects, 0, 4 * sizeof(void *));
+}
+
+void DesktopShell::bindCornerEffect(Corner corner, Effect *effect)
+{
+    m_cornerEffects[(int)corner] = effect;
 }
 
 void DesktopShell::init()
@@ -54,7 +63,9 @@ void DesktopShell::init()
                                              static_cast<DesktopShell *>(data)->moveBinding(seat, time, button);
                                          }, this);
 
-    new ScaleEffect(this);
+    bindMotion((weston_keyboard_modifier)0, &DesktopShell::motionBinding, this);
+
+    bindCornerEffect(Corner::TopLeft, new ScaleEffect(this));
     new FadeMovingEffect(this);
 }
 
@@ -98,6 +109,50 @@ void DesktopShell::moveBinding(struct wl_seat *seat, uint32_t time, uint32_t but
     shsurf = shsurf->topLevelParent();
     if (shsurf) {
         shsurf->dragMove(container_of(seat, struct weston_seat, seat));
+    }
+}
+
+void DesktopShell::motionBinding(struct wl_seat *seat, uint32_t time, wl_fixed_t fx, wl_fixed_t fy)
+{
+    if (time - m_lastMotionTime < 1000) {
+        return;
+    }
+
+    int x = wl_fixed_to_int(fx);
+    int y = wl_fixed_to_int(fy);
+    struct weston_seat *ws = container_of(seat, struct weston_seat, seat);
+    struct weston_output *tmp = nullptr, *out = nullptr;
+    wl_list_for_each(tmp, &ws->compositor->output_list, link) {
+        if (pixman_region32_contains_point(&tmp->region, x, y, NULL)) {
+            out = tmp;
+            break;
+        }
+    }
+    if (!out) {
+        out = getDefaultOutput();
+    }
+
+    Effect *effect = nullptr;
+    const int pushTime = 150;
+    if (m_cornerEffects[(int)Corner::TopLeft] && x <= out->x && y <= out->y) {
+        effect = m_cornerEffects[(int)Corner::TopLeft];
+    } else if (m_cornerEffects[(int)Corner::TopRight] && x >= out->x + out->width - 1 && y <= out->y) {
+        effect = m_cornerEffects[(int)Corner::TopRight];
+    } else if (m_cornerEffects[(int)Corner::BottomLeft] && x <= out->x && y >= out->y + out->height - 1) {
+        effect = m_cornerEffects[(int)Corner::BottomLeft];
+    } else if (m_cornerEffects[(int)Corner::BottomRight] && x >= out->x + out->width - 1 && y >= out->y + out->height - 1) {
+        effect = m_cornerEffects[(int)Corner::BottomRight];
+    } else {
+        m_enterHotZone = 0;
+    }
+
+    if (effect) {
+        if (m_enterHotZone == 0) {
+            m_enterHotZone = time;
+        } else if (time - m_enterHotZone > pushTime) {
+            m_lastMotionTime = time;
+            effect->run((struct weston_seat *)seat);
+        }
     }
 }
 

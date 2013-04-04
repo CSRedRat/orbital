@@ -32,7 +32,8 @@ public:
     ScaleEffect(Shell *shell);
     ~ScaleEffect();
 
-    virtual void run(struct wl_seat *seat, uint32_t time, uint32_t key);
+    void run(struct wl_seat *seat, uint32_t time, uint32_t key);
+    virtual void run(struct weston_seat *ws);
     void end(ShellSurface *surface);
 
 protected:
@@ -40,8 +41,6 @@ protected:
     virtual void removedSurface(ShellSurface *surf);
 
 private:
-    void run(struct weston_seat *ws);
-
     bool m_scaled;
     std::list<struct SurfaceTransform *> m_surfaces;
     struct weston_seat *m_seat;
