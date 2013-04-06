@@ -95,20 +95,13 @@ void GridDesktops::run(struct weston_seat *ws)
 
     if (m_scaled) {
         shell()->showPanels();
-        shell()->resetWorkspaces();
         shell()->endGrab(m_grab);
         shell()->selectWorkspace(m_setWs);
-        for (int i = 0; i < numWs; ++i) {
-            Workspace *w = shell()->workspace(i);
-
-            Transform tr;
-            w->setTransform(tr);
-        }
     } else {
         shell()->hidePanels();
-        shell()->showAllWorkspaces();
         shell()->startGrab(m_grab, &grab_interface, ws, DESKTOP_SHELL_CURSOR_ARROW);
         m_setWs = shell()->currentWorkspace()->number();
+
         for (int i = 0; i < numWs; ++i) {
             Workspace *w = shell()->workspace(i);
 
@@ -126,9 +119,10 @@ void GridDesktops::run(struct weston_seat *ws)
             int x = cws * w->output()->width / numWsCols;
             int y = rws * w->output()->height / numWsRows;
 
-            Transform tr;
+            Transform tr = w->transform();
             tr.scale(rx, rx, 1);
             tr.translate(x, y, 0);
+            tr.animate(w->output(), 300);
             w->setTransform(tr);
         }
     }

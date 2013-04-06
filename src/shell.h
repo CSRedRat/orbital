@@ -103,9 +103,6 @@ public:
     void selectWorkspace(uint32_t id);
     uint32_t numWorkspaces() const;
 
-    void showAllWorkspaces();
-    void resetWorkspaces();
-
 protected:
     Shell(struct weston_compositor *ec);
     virtual void init();
@@ -136,10 +133,10 @@ private:
     struct weston_surface *createBlackSurface(ShellSurface *fs_surface, float x, float y, int w, int h);
     static void sendConfigure(struct weston_surface *surface, uint32_t edges, int32_t width, int32_t height);
     bool surfaceIsTopFullscreen(ShellSurface *surface);
-    void activateWorkspace(Workspace *old);
     void pointerFocus(ShellSeat *shseat, struct wl_pointer *pointer);
     void pingTimeout(ShellSurface *shsurf);
     void pong(ShellSurface *shsurf);
+    void activateWorkspace();
 
     struct weston_compositor *m_compositor;
     Layer m_backgroundLayer;
@@ -148,7 +145,7 @@ private:
     std::vector<Effect *> m_effects;
     ShellSurfaceList m_surfaces;
     std::vector<Workspace *> m_workspaces;
-    uint32_t m_currentWorkspace;
+    int m_currentWorkspace;
 
     struct weston_surface *m_blackSurface;
     struct weston_surface *m_grabSurface;

@@ -31,6 +31,7 @@ public:
 template<typename T>
 class Rect2D {
 public:
+    inline Rect2D() : x(0), y(0), width(0), height(0) {}
     inline Rect2D(T a, T b, T w, T h) : x(a), y(b), width(w), height(h) {}
     T x;
     T y;

@@ -20,6 +20,9 @@
 
 #include <weston/compositor.h>
 
+#include "animation.h"
+#include "signal.h"
+
 class Transform {
 public:
     Transform();
@@ -28,11 +31,31 @@ public:
     void scale(float x, float y, float z);
     void translate(float x, float y, float z);
 
+    void apply();
+    void animate(struct weston_output *output, uint32_t duration);
+
+    void currentTranslation(float *x, float *y = nullptr, float *z = nullptr) const;
+    void currentScale(float *x, float *y = nullptr, float *z = nullptr) const;
+
     inline const struct weston_transform *nativeHandle() const { return &m_transform; }
     inline struct weston_transform *nativeHandle() { return &m_transform; }
 
+    Signal<> updatedSignal;
+
 private:
+    void updateAnim(float value);
+
     struct weston_transform m_transform;
+    Animation m_animation;
+
+    struct State {
+        float scale[3];
+        float translate[3];
+    };
+
+    State m_source;
+    State m_current;
+    State m_target;
 };
 
 #endif

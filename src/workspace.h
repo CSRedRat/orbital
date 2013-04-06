@@ -33,6 +33,7 @@ public:
     void stackAbove(struct weston_surface *surf, struct weston_surface *parent);
 
     void setTransform(const Transform &tr);
+    inline const Transform &transform() const { return m_transform; }
 
     inline int number() const { return m_number; }
     int numberOfSurfaces() const;
@@ -43,7 +44,11 @@ public:
     void insert(struct weston_layer *layer);
     void remove();
 
+    void clip();
+
 private:
+    void damage();
+
     Shell *m_shell;
     int m_number;
     struct weston_surface *m_rootSurface;

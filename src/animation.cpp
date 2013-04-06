@@ -20,6 +20,7 @@
 
 Animation::Animation()
          : m_curve(nullptr)
+         , m_output(nullptr)
 {
     m_animation.parent = this;
     wl_list_init(&m_animation.ani.link);
@@ -29,9 +30,35 @@ Animation::Animation()
     };
 }
 
+Animation::Animation(const Animation &ani)
+         : Animation()
+{
+    *this = ani;
+}
+
 Animation::~Animation()
 {
     stop();
+}
+
+Animation &Animation::operator=(const Animation &ani)
+{
+    stop();
+
+    m_start = ani.m_start;
+    m_target = ani.m_target;
+    m_duration = ani.m_duration;
+    m_timestamp = ani.m_timestamp;
+    m_runFlags = ani.m_runFlags;
+    m_output = ani.m_output;
+    m_animation.ani = ani.m_animation.ani;
+
+    if (ani.isRunning()) {
+        wl_list_insert(&m_output->animation_list, &m_animation.ani.link);
+        weston_compositor_schedule_repaint(m_output->compositor);
+    }
+
+    return *this;
 }
 
 void Animation::setStart(float value)
@@ -51,6 +78,7 @@ void Animation::run(struct weston_output *output, uint32_t duration, Animation::
     m_duration = duration;
     m_runFlags = flags;
     m_animation.ani.frame_counter = 0;
+    m_output = output;
 
     wl_list_insert(&output->animation_list, &m_animation.ani.link);
     weston_compositor_schedule_repaint(output->compositor);
@@ -61,13 +89,13 @@ void Animation::stop()
     if (isRunning()) {
         wl_list_remove(&m_animation.ani.link);
         wl_list_init(&m_animation.ani.link);
+        m_output = nullptr;
     }
 }
 
 bool Animation::isRunning() const
 {
-    //can't use wl_list_empty here because it wants a wl_link* while i have a const wl_link*
-    return m_animation.ani.link.next != &m_animation.ani.link;
+    return m_output && !wl_list_empty(&m_animation.ani.link);
 }
 
 void Animation::update(struct weston_output *output, uint32_t msecs)

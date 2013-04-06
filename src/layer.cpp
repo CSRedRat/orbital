@@ -127,6 +127,11 @@ int Layer::numberOfSurfaces() const
     return wl_list_length(&m_layer.surface_list);
 }
 
+void Layer::clip(const IRect2D &rect)
+{
+    weston_layer_clip(&m_layer, rect.x, rect.y, rect.width, rect.height);
+}
+
 Layer::iterator Layer::begin()
 {
     return iterator(&m_layer.surface_list, m_layer.surface_list.next);

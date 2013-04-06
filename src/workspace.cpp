@@ -66,10 +66,11 @@ void Workspace::setTransform(const Transform &tr)
 {
     wl_list_remove(&m_transform.nativeHandle()->link);
     m_transform = tr;
+    m_transform.updatedSignal.connect(this, &Workspace::damage);
+
     wl_list_insert(&m_rootSurface->geometry.transformation_list, &m_transform.nativeHandle()->link);
 
-    weston_surface_geometry_dirty(m_rootSurface);
-    weston_surface_damage(m_rootSurface);
+    damage();
 }
 
 int Workspace::numberOfSurfaces() const
@@ -101,4 +102,26 @@ void Workspace::insert(struct weston_layer *layer)
 void Workspace::remove()
 {
     m_layer.remove();
+}
+
+void Workspace::clip()
+{
+    float x, y;
+    m_transform.currentTranslation(&x, &y);
+    IRect2D rect;
+    rect.x = x;
+    rect.y = y;
+    m_transform.currentScale(&x, &y);
+    rect.width = output()->width * x;
+    rect.height = output()->height * y;
+
+    m_layer.clip(rect);
+}
+
+void Workspace::damage()
+{
+    clip();
+
+    weston_surface_geometry_dirty(m_rootSurface);
+    weston_surface_damage(m_rootSurface);
 }

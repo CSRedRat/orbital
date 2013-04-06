@@ -32,6 +32,7 @@ public:
         SendDone = 1
     };
     Animation();
+    Animation(const Animation &ani);
     ~Animation();
 
     void setStart(float value);
@@ -41,6 +42,8 @@ public:
     bool isRunning() const;
     template<class T>
     void setCurve(const T &curve) { delete m_curve; m_curve = new T; *static_cast<T *>(m_curve) = curve; }
+
+    Animation &operator=(const Animation &ani);
 
     Signal<float> updateSignal;
     Signal<> doneSignal;
@@ -59,6 +62,7 @@ private:
     uint32_t m_timestamp;
     Flags m_runFlags;
     AnimationCurve *m_curve;
+    struct weston_output *m_output;
 };
 
 inline Animation::Flags operator|(Animation::Flags a, Animation::Flags b) {

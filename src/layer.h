@@ -20,6 +20,8 @@
 
 #include <weston/compositor.h>
 
+#include "utils.h"
+
 class ShellSurface;
 
 class Layer {
@@ -75,6 +77,8 @@ public:
 
     void stackAbove(struct weston_surface *surf, struct weston_surface *parent);
     void stackBelow(struct weston_surface *surf, struct weston_surface *parent);
+
+    void clip(const IRect2D &rect);
 
     iterator begin();
     const_iterator begin() const;

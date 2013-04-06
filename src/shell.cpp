@@ -103,8 +103,19 @@ void Shell::init()
     m_panelsLayer.insert(&m_fullscreenLayer);
     m_backgroundLayer.insert(&m_panelsLayer);
 
+    Workspace *prev = nullptr;
+    for (uint32_t i = 0; i < m_workspaces.size(); ++i) {
+        Workspace *w = m_workspaces[i];
+        if (prev) {
+            w->insert(prev);
+        } else {
+            w->insert(&m_panelsLayer);
+        }
+        prev = w;
+    }
+
     m_currentWorkspace = 0;
-    activateWorkspace(nullptr);
+    activateWorkspace();
 
     m_blackSurface = weston_surface_create(m_compositor);
 
@@ -577,20 +588,18 @@ Workspace *Shell::workspace(uint32_t id) const
 
 void Shell::selectPreviousWorkspace()
 {
-    Workspace *old = currentWorkspace();
     if (--m_currentWorkspace < 0) {
         m_currentWorkspace = m_workspaces.size() - 1;
     }
-    activateWorkspace(old);
+    activateWorkspace();
 }
 
 void Shell::selectNextWorkspace()
 {
-    Workspace *old = currentWorkspace();
-    if (++m_currentWorkspace == m_workspaces.size()) {
+    if (++m_currentWorkspace == (int)m_workspaces.size()) {
         m_currentWorkspace = 0;
     }
-    activateWorkspace(old);
+    activateWorkspace();
 }
 
 void Shell::selectWorkspace(uint32_t id)
@@ -599,46 +608,38 @@ void Shell::selectWorkspace(uint32_t id)
         return;
     }
 
-    Workspace *old = currentWorkspace();
     m_currentWorkspace = id;
-    activateWorkspace(old);
+    activateWorkspace();
 }
 
-void Shell::activateWorkspace(Workspace *old)
+void Shell::activateWorkspace()
 {
-    if (old) {
-        old->remove();
-    }
+    int numWs = numWorkspaces();
+    int numWsCols = ceil(sqrt(numWs));
 
-    currentWorkspace()->insert(container_of(m_compositor->cursor_layer.link.next, struct weston_layer, link));
+    int currWsCol = m_currentWorkspace % numWsCols;
+    int currWsRow = m_currentWorkspace / numWsCols;
+    int off_x = currWsCol * currentWorkspace()->output()->width;
+    int off_y = currWsRow * currentWorkspace()->output()->height;
+
+    for (uint i = 0; i < m_workspaces.size(); ++i) {
+        Workspace *w = m_workspaces[i];
+
+        int cws = i % numWsCols;
+        int rws = i / numWsCols;
+
+        Transform tr = w->transform();
+        tr.reset();
+        tr.translate(cws * w->output()->width - off_x, rws * w->output()->height - off_y, 0.f);
+        tr.animate(w->output(), 300);
+        w->setTransform(tr);
+
+    }
 }
 
 uint32_t Shell::numWorkspaces() const
 {
     return m_workspaces.size();
-}
-
-void Shell::showAllWorkspaces()
-{
-    currentWorkspace()->remove();
-
-    Workspace *prev = nullptr;
-    for (Workspace *w: m_workspaces) {
-        if (prev) {
-            w->insert(prev);
-        } else {
-            w->insert(container_of(m_compositor->cursor_layer.link.next, struct weston_layer, link));
-        }
-        prev = w;
-    }
-}
-
-void Shell::resetWorkspaces()
-{
-    for (Workspace *w: m_workspaces) {
-        w->remove();
-    }
-    activateWorkspace(nullptr);
 }
 
 void Shell::pointerFocus(ShellSeat *, struct wl_pointer *pointer)
