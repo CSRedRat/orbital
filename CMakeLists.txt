@@ -2,36 +2,14 @@ cmake_minimum_required(VERSION 2.8)
 project(orbital)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_CXX_FLAGS "-Wall -g -std=c++0x")
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(Wayland)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
-                    ${CMAKE_CURRENT_SOURCE_DIR}/src/
                     ${CMAKE_CURRENT_SOURCE_DIR}/src/effects
                     /usr/include/pixman-1)
 
-set(SOURCES
-    src/shell.cpp
-    src/layer.cpp
-    src/shellsurface.cpp
-    src/shellseat.cpp
-    src/workspace.cpp
-    src/effect.cpp
-    src/transform.cpp
-    src/animation.cpp
-    src/desktop-shell.cpp
-    src/effects/scaleeffect.cpp
-    src/effects/griddesktops.cpp
-    src/effects/zoomeffect.cpp
-    src/effects/fademovingeffect.cpp)
+add_subdirectory(src)
+add_subdirectory(client)
 
-wayland_add_protocol_server(SOURCES
-    ${CMAKE_SOURCE_DIR}/protocol/desktop-shell.xml
-    desktop-shell
-)
-
-add_library(orbital-shell SHARED ${SOURCES})
-set_target_properties(orbital-shell PROPERTIES PREFIX "")
-# target_link_libraries(shell )
 
