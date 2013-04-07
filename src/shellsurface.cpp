@@ -410,6 +410,8 @@ struct MoveGrab : public ShellGrab {
     wl_fixed_t dx, dy;
     uint32_t touchedEdgeTime;
     Transform transform;
+    int x, y;
+    int delta_x, delta_y;
 
     void update()
     {
@@ -419,11 +421,11 @@ struct MoveGrab : public ShellGrab {
         struct weston_seat *seat = container_of(pointer->seat, struct weston_seat, seat);
         struct weston_surface *sprite = seat->sprite;
         if (sprite) {
-            weston_surface_set_position(seat->sprite, (int)x - seat->hotspot_x, (int)y - seat->hotspot_y);
+            weston_surface_set_position(seat->sprite, delta_x + (int)x - seat->hotspot_x, delta_y + (int)y - seat->hotspot_y);
             weston_surface_schedule_repaint(seat->sprite);
         }
 
-        weston_surface_set_position(shsurf->m_surface, (int)x + wl_fixed_to_int(dx), (int)y + wl_fixed_to_int(dy));
+        weston_surface_set_position(shsurf->m_surface, delta_x + (int)x + wl_fixed_to_int(dx), delta_y + (int)y + wl_fixed_to_int(dy));
         weston_surface_schedule_repaint(shsurf->m_surface);
     }
 };
@@ -459,23 +461,33 @@ void ShellSurface::move_grab_motion(struct wl_pointer_grab *grab, uint32_t time,
                 move->transform.translate(out->width - 5, wl_fixed_to_int(pointer->y), 0);
                 move->transform.apply();
                 move->transform.translate(0, wl_fixed_to_int(pointer->y), 0);
+
+                move->x = 0;
             } else {
                 move->shell->selectPreviousWorkspace();
                 notify_motion(container_of(pointer->seat, struct weston_seat, seat), time, wl_fixed_from_int(out->width - 5), 0);
                 move->transform.translate(0, wl_fixed_to_int(pointer->y), 0);
                 move->transform.apply();
                 move->transform.translate(out->width - 5, wl_fixed_to_int(pointer->y), 0);
+
+                move->x = out->width - 5;
             }
             move->transform.animate(out, 300);
             move->update();
 
             move->touchedEdgeTime = 0;
+
+            move->y = wl_fixed_to_int(pointer->y);
+            move->delta_x = 0;
+            move->delta_y = 0;
             return;
         }
     }
 
     struct weston_surface *es = shsurf->m_surface;
 
+    move->delta_x = wl_fixed_to_int(pointer->x) - move->x;
+    move->delta_y = wl_fixed_to_int(pointer->y) - move->y;
     weston_surface_configure(es, dx, dy, es->geometry.width, es->geometry.height);
 
     weston_compositor_schedule_repaint(es->compositor);
