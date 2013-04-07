@@ -40,7 +40,7 @@ public:
     inline const struct weston_transform *nativeHandle() const { return &m_transform; }
     inline struct weston_transform *nativeHandle() { return &m_transform; }
 
-    Signal<> updatedSignal;
+    mutable Signal<> updatedSignal;
 
 private:
     void updateAnim(float value);

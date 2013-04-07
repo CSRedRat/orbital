@@ -23,6 +23,7 @@
 #include "shell.h"
 #include "shellseat.h"
 #include "workspace.h"
+#include "transform.h"
 
 #include "wayland-desktop-shell-server-protocol.h"
 
@@ -171,6 +172,12 @@ void ShellSurface::addTransform(struct weston_transform *transform)
     damage();
 }
 
+void ShellSurface::addTransform(const Transform &transform)
+{
+    addTransform(const_cast<struct weston_transform *>(transform.nativeHandle()));
+    transform.updatedSignal.connect(this, &ShellSurface::damage);
+}
+
 void ShellSurface::removeTransform(struct weston_transform *transform)
 {
     if (wl_list_empty(&transform->link)) {
@@ -181,6 +188,12 @@ void ShellSurface::removeTransform(struct weston_transform *transform)
     wl_list_init(&transform->link);
 
     damage();
+}
+
+void ShellSurface::removeTransform(const Transform &transform)
+{
+    removeTransform(const_cast<struct weston_transform *>(transform.nativeHandle()));
+    transform.updatedSignal.disconnect(this, &ShellSurface::damage);
 }
 
 void ShellSurface::damage()
@@ -379,12 +392,30 @@ struct MoveGrab : public ShellGrab {
     struct wl_listener shsurf_destroy_listener;
     wl_fixed_t dx, dy;
     uint32_t touchedEdgeTime;
+    Transform transform;
+
+    void update()
+    {
+        float x, y;
+        transform.currentTranslation(&x, &y);
+
+        struct weston_seat *seat = container_of(pointer->seat, struct weston_seat, seat);
+        struct weston_surface *sprite = seat->sprite;
+        if (sprite) {
+            weston_surface_set_position(seat->sprite, (int)x - seat->hotspot_x, (int)y - seat->hotspot_y);
+            weston_surface_schedule_repaint(seat->sprite);
+        }
+
+        weston_surface_set_position(shsurf->m_surface, (int)x + wl_fixed_to_int(dx), (int)y + wl_fixed_to_int(dy));
+        weston_surface_schedule_repaint(shsurf->m_surface);
+    }
 };
 
 void ShellSurface::move_grab_motion(struct wl_pointer_grab *grab, uint32_t time, wl_fixed_t x, wl_fixed_t y)
 {
     ShellGrab *shgrab = container_of(grab, ShellGrab, grab);
     MoveGrab *move = static_cast<MoveGrab *>(shgrab);
+
     struct wl_pointer *pointer = grab->pointer;
     ShellSurface *shsurf = move->shsurf;
     int dx = wl_fixed_to_int(pointer->x + move->dx);
@@ -408,10 +439,19 @@ void ShellSurface::move_grab_motion(struct wl_pointer_grab *grab, uint32_t time,
             if (changeWs == 1) {
                 move->shell->selectNextWorkspace();
                 notify_motion(container_of(pointer->seat, struct weston_seat, seat), time, -wl_fixed_from_int(out->width - 5), 0);
+                move->transform.translate(out->width - 5, wl_fixed_to_int(pointer->y), 0);
+                move->transform.apply();
+                move->transform.translate(0, wl_fixed_to_int(pointer->y), 0);
             } else {
                 move->shell->selectPreviousWorkspace();
                 notify_motion(container_of(pointer->seat, struct weston_seat, seat), time, wl_fixed_from_int(out->width - 5), 0);
+                move->transform.translate(0, wl_fixed_to_int(pointer->y), 0);
+                move->transform.apply();
+                move->transform.translate(out->width - 5, wl_fixed_to_int(pointer->y), 0);
             }
+            move->transform.animate(out, 300);
+            move->update();
+
             move->touchedEdgeTime = 0;
             return;
         }
@@ -435,7 +475,7 @@ void ShellSurface::move_grab_button(struct wl_pointer_grab *grab, uint32_t time,
         Shell::endGrab(shell_grab);
         move->shell->currentWorkspace()->addSurface(move->shsurf);
         move->shsurf->moveEndSignal(move->shsurf);
-        delete shell_grab;
+        delete move;
     }
 }
 
@@ -471,6 +511,7 @@ void ShellSurface::dragMove(struct weston_seat *ws)
     move->shsurf = this;
     move->grab.focus = &m_surface->surface;
     move->touchedEdgeTime = 0;
+    move->transform.updatedSignal.connect(move, &MoveGrab::update);
 
     m_shell->startGrab(move, &m_move_grab_interface, ws, DESKTOP_SHELL_CURSOR_MOVE);
     shell()->currentWorkspace()->removeSurface(this);

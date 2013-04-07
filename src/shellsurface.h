@@ -28,6 +28,7 @@
 class Shell;
 class ShellSeat;
 class Workspace;
+class Transform;
 
 class ShellSurface {
 public:
@@ -48,7 +49,9 @@ public:
     void unmapped();
 
     void addTransform(struct weston_transform *transform);
+    void addTransform(const Transform &transform);
     void removeTransform(struct weston_transform *transform);
+    void removeTransform(const Transform &transform);
     void damage();
     void setAlpha(float alpha);
 
@@ -180,6 +183,7 @@ private:
     friend class Shell;
     friend class Layer;
     friend class Workspace;
+    friend class MoveGrab;
 };
 
 inline void ShellSurface::shell_surface_pong(struct wl_client *client, struct wl_resource *resource, uint32_t serial) {
