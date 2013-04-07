@@ -736,8 +736,7 @@ void Shell::sigchld(int status)
 
 void Shell::launchShellProcess()
 {
-#define LIBEXECDIR "/usr/local/libexec"
-    const char *shell_exe = LIBEXECDIR "/weston-desktop-shell";
+    const char *shell_exe = "./client/orbital-shell-client";
 
     m_child.client = weston_client_launch(m_compositor,
                                           &m_child.process,
