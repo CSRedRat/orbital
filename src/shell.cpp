@@ -135,20 +135,6 @@ void Shell::init()
 
     m_backgroundLayer.addSurface(m_blackSurface);
 
-    for (Workspace *ws: m_workspaces) {
-        struct weston_surface *es = weston_surface_create(m_compositor);
-        es->configure = black_surface_configure;
-        es->configure_private = 0;
-        weston_surface_configure(es, x, y, w, h);
-        weston_surface_set_color(es, random() / (float)RAND_MAX, random() / (float)RAND_MAX, random() / (float)RAND_MAX, 1);
-        pixman_region32_fini(&es->opaque);
-        pixman_region32_init_rect(&es->opaque, 0, 0, w, h);
-        pixman_region32_fini(&es->input);
-        pixman_region32_init_rect(&es->input, 0, 0, w, h);
-
-        ws->setBackground(es);
-    }
-
     struct wl_event_loop *loop = wl_display_get_event_loop(m_compositor->wl_display);
     wl_event_loop_add_idle(loop, [](void *data) { static_cast<Shell *>(data)->launchShellProcess(); }, this);
 
@@ -529,22 +515,15 @@ static void configure_static_surface(struct weston_surface *es, Layer *layer, in
     }
 }
 
-void Shell::backgroundConfigure(struct weston_surface *es, int32_t sx, int32_t sy, int32_t width, int32_t height)
-{
-    configure_static_surface(es, &m_backgroundLayer, width, height);
-}
-
 void Shell::panelConfigure(struct weston_surface *es, int32_t sx, int32_t sy, int32_t width, int32_t height)
 {
     configure_static_surface(es, &m_panelsLayer, width, height);
 }
 
-void Shell::setBackgroundSurface(struct weston_surface *surface, struct weston_output *output)
+void Shell::setBackgroundSurface(struct weston_surface *surface, int ws, struct weston_output *output)
 {
-//     surface->configure = [](struct weston_surface *es, int32_t sx, int32_t sy, int32_t width, int32_t height) {
-//         static_cast<Shell *>(es->configure_private)->backgroundConfigure(es, sx, sy, width, height); };
-//     surface->configure_private = this;
-//     surface->output = output;
+    m_workspaces[ws]->setBackground(surface);
+    surface->output = output;
 }
 
 void Shell::setGrabSurface(struct weston_surface *surface)

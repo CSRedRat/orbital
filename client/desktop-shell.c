@@ -1107,17 +1107,20 @@ int main(int argc, char *argv[])
 	display_set_global_handler(desktop.display, global_handler);
 
 	wl_list_for_each(output, &desktop.outputs, link) {
-		struct wl_surface *surface;
+        int i;
+        for (i = 0; i < 4; ++i) {
+            struct wl_surface *surface;
 
-		output->panel = panel_create(desktop.display);
-		surface = window_get_wl_surface(output->panel->window);
-		desktop_shell_set_panel(desktop.shell,
-					output->output, surface);
+            output->panel = panel_create(desktop.display);
+            surface = window_get_wl_surface(output->panel->window);
+            desktop_shell_set_panel(desktop.shell,
+                        output->output, surface);
 
-		output->background = background_create(&desktop);
-		surface = window_get_wl_surface(output->background->window);
-		desktop_shell_set_background(desktop.shell,
-					     output->output, surface);
+            output->background = background_create(&desktop);
+            surface = window_get_wl_surface(output->background->window);
+            desktop_shell_set_background(desktop.shell, i,
+                            output->output, surface);
+        }
 	}
 
 	grab_surface_create(&desktop);

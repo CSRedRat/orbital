@@ -8,6 +8,7 @@
     </description>
 
     <request name="set_background">
+      <arg name="workspace" type="int"/>
       <arg name="output" type="object" interface="wl_output"/>
       <arg name="surface" type="object" interface="wl_surface"/>
     </request>

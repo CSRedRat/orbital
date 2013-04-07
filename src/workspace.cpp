@@ -62,11 +62,34 @@ void Workspace::stackAbove(struct weston_surface *surf, struct weston_surface *p
     m_layer.stackAbove(surf, parent);
 }
 
+void Workspace::configure_background_surface(struct weston_surface *es, int32_t x, int32_t y, int32_t width, int32_t height)
+{
+    if (width == 0)
+        return;
+
+    Workspace *ws = static_cast<Workspace *>(es->configure_private);
+
+    for (struct weston_surface *s: ws->m_background) {
+        if (s->output == es->output && s != es) {
+            weston_surface_unmap(s);
+            s->configure = NULL;
+        }
+    }
+
+    weston_surface_configure(es, es->output->x, es->output->y, width, height);
+
+    if (wl_list_empty(&es->layer_link)) {
+        ws->m_background.addSurface(es);
+        weston_compositor_schedule_repaint(es->compositor);
+    }
+}
+
 void Workspace::setBackground(struct weston_surface *surface)
 {
     m_backgroundSurface = surface;
     weston_surface_set_transform_parent(surface, m_rootSurface);
-    m_background.addSurface(surface);
+    surface->configure = configure_background_surface;
+    surface->configure_private = this;
 }
 
 void Workspace::setTransform(const Transform &tr)

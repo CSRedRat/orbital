@@ -51,6 +51,8 @@ public:
 private:
     void damage();
 
+    static void configure_background_surface(struct weston_surface *es, int32_t x, int32_t y, int32_t width, int32_t height);
+
     Shell *m_shell;
     int m_number;
     struct weston_surface *m_rootSurface;

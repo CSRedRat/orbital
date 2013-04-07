@@ -158,7 +158,7 @@ void DesktopShell::moveBinding(struct wl_seat *seat, uint32_t time, uint32_t but
     }
 }
 
-void DesktopShell::setBackground(struct wl_client *client, struct wl_resource *resource, struct wl_resource *output_resource,
+void DesktopShell::setBackground(struct wl_client *client, struct wl_resource *resource, int ws, struct wl_resource *output_resource,
                                  struct wl_resource *surface_resource)
 {
     struct weston_surface *surface = static_cast<weston_surface *>(surface_resource->data);
@@ -169,12 +169,12 @@ void DesktopShell::setBackground(struct wl_client *client, struct wl_resource *r
         return;
     }
 
-//     setBackgroundSurface(surface, static_cast<weston_output *>(output_resource->data));
-//
-//     desktop_shell_send_configure(resource, 0,
-//                                  surface_resource,
-//                                  surface->output->width,
-//                                  surface->output->height);
+    setBackgroundSurface(surface, ws, static_cast<weston_output *>(output_resource->data));
+
+    desktop_shell_send_configure(resource, 0,
+                                 surface_resource,
+                                 surface->output->width,
+                                 surface->output->height);
 }
 
 void DesktopShell::setPanel(struct wl_client *client, struct wl_resource *resource, struct wl_resource *output_resource,

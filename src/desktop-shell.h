@@ -35,7 +35,7 @@ private:
     void unbind(struct wl_resource *resource);
     void moveBinding(struct wl_seat *seat, uint32_t time, uint32_t button);
 
-    void setBackground(struct wl_client *client, struct wl_resource *resource, struct wl_resource *output_resource,
+    void setBackground(struct wl_client *client, struct wl_resource *resource, int ws, struct wl_resource *output_resource,
                                              struct wl_resource *surface_resource);
     void setPanel(struct wl_client *client, struct wl_resource *resource, struct wl_resource *output_resource,
                                         struct wl_resource *surface_resource);
@@ -43,8 +43,8 @@ private:
     void unlock(struct wl_client *client, struct wl_resource *resource);
     void setGrabSurface(struct wl_client *client, struct wl_resource *resource, struct wl_resource *surface_resource);
 
-    static void desktop_shell_set_background(struct wl_client *client, struct wl_resource *resource, struct wl_resource *output_resource,
-                                             struct wl_resource *surface_resource);
+    static void desktop_shell_set_background(struct wl_client *client, struct wl_resource *resource, int workspace,
+                                             struct wl_resource *output_resource, struct wl_resource *surface_resource);
     static void desktop_shell_set_panel(struct wl_client *client, struct wl_resource *resource, struct wl_resource *output_resource,
                                         struct wl_resource *surface_resource);
     static void desktop_shell_set_lock_surface(struct wl_client *client, struct wl_resource *resource, struct wl_resource *surface_resource);
@@ -54,9 +54,9 @@ private:
 };
 
 #define _this static_cast<DesktopShell *>(resource->data)
-inline void DesktopShell::desktop_shell_set_background(struct wl_client *client, struct wl_resource *resource,
+inline void DesktopShell::desktop_shell_set_background(struct wl_client *client, struct wl_resource *resource, int ws,
                                                        struct wl_resource *output_resource, struct wl_resource *surface_resource) {
-    _this->setBackground(client, resource, output_resource, surface_resource);
+    _this->setBackground(client, resource, ws, output_resource, surface_resource);
 }
 
 inline void DesktopShell::desktop_shell_set_panel(struct wl_client *client, struct wl_resource *resource,
