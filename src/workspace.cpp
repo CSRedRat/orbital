@@ -62,6 +62,13 @@ void Workspace::stackAbove(struct weston_surface *surf, struct weston_surface *p
     m_layer.stackAbove(surf, parent);
 }
 
+void Workspace::setBackground(struct weston_surface *surface)
+{
+    m_backgroundSurface = surface;
+    weston_surface_set_transform_parent(surface, m_rootSurface);
+    m_background.addSurface(surface);
+}
+
 void Workspace::setTransform(const Transform &tr)
 {
     wl_list_remove(&m_transform.nativeHandle()->link);
@@ -87,16 +94,19 @@ struct weston_output *Workspace::output() const
 void Workspace::insert(Workspace *ws)
 {
     m_layer.insert(&ws->m_layer);
+    m_background.insert(&m_layer);
 }
 
 void Workspace::insert(Layer *layer)
 {
     m_layer.insert(layer);
+    m_background.insert(&m_layer);
 }
 
 void Workspace::insert(struct weston_layer *layer)
 {
     m_layer.insert(layer);
+    m_background.insert(&m_layer);
 }
 
 void Workspace::remove()

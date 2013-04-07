@@ -32,6 +32,8 @@ public:
     void restack(ShellSurface *surface);
     void stackAbove(struct weston_surface *surf, struct weston_surface *parent);
 
+    void setBackground(struct weston_surface *surface);
+
     void setTransform(const Transform &tr);
     inline const Transform &transform() const { return m_transform; }
 
@@ -54,6 +56,8 @@ private:
     struct weston_surface *m_rootSurface;
     Transform m_transform;
     Layer m_layer;
+    Layer m_background;
+    struct weston_surface *m_backgroundSurface;
 };
 
 #endif
