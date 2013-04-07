@@ -171,6 +171,7 @@ void Workspace::clip()
     rect.height = output()->height * y;
 
     m_layer.clip(rect);
+    m_background.clip(rect);
 }
 
 void Workspace::damage()
