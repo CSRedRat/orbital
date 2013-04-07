@@ -208,6 +208,11 @@ void ShellSurface::setAlpha(float alpha)
     damage();
 }
 
+void ShellSurface::setPosition(float x, float y)
+{
+    weston_surface_set_position(m_surface, x, y);
+}
+
 void ShellSurface::popupDone()
 {
     wl_shell_surface_send_popup_done(&m_resource);
@@ -237,6 +242,18 @@ int32_t ShellSurface::width() const
 int32_t ShellSurface::height() const
 {
     return m_surface->geometry.height;
+}
+
+float ShellSurface::transformedX() const
+{
+    pixman_box32_t *box = pixman_region32_extents(&m_surface->transform.boundingbox);
+    return box->x1;
+}
+
+float ShellSurface::transformedY() const
+{
+    pixman_box32_t *box = pixman_region32_extents(&m_surface->transform.boundingbox);
+    return box->y1;
 }
 
 int32_t ShellSurface::transformedWidth() const

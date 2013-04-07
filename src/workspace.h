@@ -42,6 +42,9 @@ public:
     int numberOfSurfaces() const;
     struct weston_output *output() const;
 
+    float x() const;
+    float y() const;
+
     void insert(Workspace *ws);
     void insert(Layer *layer);
     void insert(struct weston_layer *layer);

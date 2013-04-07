@@ -24,15 +24,15 @@ Workspace::Workspace(Shell *shell, int number)
          , m_number(number)
 {
     int x = 0, y = 0;
-    int w = 0, h = 0;
+    int w = 1, h = 1; // cannot use 0 here or else the transforms won't be calculated
 
     m_rootSurface = weston_surface_create(shell->compositor());
     m_rootSurface->configure = [](struct weston_surface *es, int32_t sx, int32_t sy, int32_t width, int32_t height) {};
     m_rootSurface->configure_private = 0;
     weston_surface_configure(m_rootSurface, x, y, w, h);
-    weston_surface_set_color(m_rootSurface, 0.0, 0.0, 0.0, 1);
+    weston_surface_set_color(m_rootSurface, 0.0, 0.0, 0.0, 0.0);
     pixman_region32_fini(&m_rootSurface->opaque);
-    pixman_region32_init_rect(&m_rootSurface->opaque, 0, 0, w, h);
+    pixman_region32_init_rect(&m_rootSurface->opaque, 0, 0, 0, 0);
     pixman_region32_fini(&m_rootSurface->input);
     pixman_region32_init_rect(&m_rootSurface->input, 0, 0, w, h);
 
@@ -44,12 +44,25 @@ Workspace::~Workspace()
 
 }
 
+float Workspace::x() const
+{
+    pixman_box32_t *box = pixman_region32_extents(&m_rootSurface->transform.boundingbox);
+    return box->x1;
+}
+
+float Workspace::y() const
+{
+    pixman_box32_t *box = pixman_region32_extents(&m_rootSurface->transform.boundingbox);
+    return box->y1;
+}
+
 void Workspace::addSurface(ShellSurface *surface)
 {
     if (!surface->transformParent()) {
         weston_surface_set_transform_parent(surface->m_surface, m_rootSurface);
     }
     m_layer.addSurface(surface);
+    surface->m_workspace = this;
 }
 
 void Workspace::removeSurface(ShellSurface *surface)
@@ -58,6 +71,7 @@ void Workspace::removeSurface(ShellSurface *surface)
         weston_surface_set_transform_parent(surface->m_surface, nullptr);
     }
     wl_list_remove(&surface->m_surface->layer_link);
+    surface->m_workspace = nullptr;
 }
 
 void Workspace::restack(ShellSurface *surface)

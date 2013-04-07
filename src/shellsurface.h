@@ -54,6 +54,7 @@ public:
     void removeTransform(const Transform &transform);
     void damage();
     void setAlpha(float alpha);
+    void setPosition(float x, float y);
 
     inline Shell *shell() const { return m_shell; }
     inline struct wl_resource *wl_resource() { return &m_resource; }
@@ -67,6 +68,8 @@ public:
     int32_t y() const;
     int32_t width() const;
     int32_t height() const;
+    float transformedX() const;
+    float transformedY() const;
     int32_t transformedWidth() const;
     int32_t transformedHeight() const;
     float alpha() const;
