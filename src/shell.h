@@ -28,6 +28,7 @@ struct ShellGrab;
 class Effect;
 class Workspace;
 class ShellSeat;
+class Pager;
 
 typedef std::vector<ShellSurface *> ShellSurfaceList;
 
@@ -96,12 +97,7 @@ public:
 
     inline struct weston_compositor *compositor() const { return m_compositor; }
     struct weston_output *getDefaultOutput() const;
-    Workspace *currentWorkspace() const;
-    Workspace *workspace(uint32_t id) const;
-    void selectPreviousWorkspace();
-    void selectNextWorkspace();
-    void selectWorkspace(uint32_t id);
-    uint32_t numWorkspaces() const;
+    Pager *pager() const { return m_pager; }
 
     void putInLimbo(ShellSurface *surface);
 
@@ -123,6 +119,7 @@ protected:
         uint32_t deathstamp;
     };
     Child m_child;
+    Pager *m_pager;
 
 private:
     void bind(struct wl_client *client, uint32_t version, uint32_t id);
@@ -138,7 +135,6 @@ private:
     void pointerFocus(ShellSeat *shseat, struct wl_pointer *pointer);
     void pingTimeout(ShellSurface *shsurf);
     void pong(ShellSurface *shsurf);
-    void activateWorkspace();
 
     struct weston_compositor *m_compositor;
     Layer m_backgroundLayer;
@@ -147,8 +143,6 @@ private:
     Layer m_fullscreenLayer;
     std::vector<Effect *> m_effects;
     ShellSurfaceList m_surfaces;
-    std::vector<Workspace *> m_workspaces;
-    int m_currentWorkspace;
 
     struct weston_surface *m_blackSurface;
     struct weston_surface *m_grabSurface;

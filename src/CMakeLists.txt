@@ -12,6 +12,7 @@ set(SOURCES
     shellsurface.cpp
     shellseat.cpp
     workspace.cpp
+    pager.cpp
     effect.cpp
     transform.cpp
     animation.cpp

@@ -31,6 +31,7 @@
 #include "workspace.h"
 #include "effect.h"
 #include "desktop-shell.h"
+#include "pager.h"
 
 Binding::Binding(struct weston_binding *binding)
        : m_binding(binding)
@@ -95,28 +96,15 @@ void Shell::init()
         shseat->pointerFocusSignal.connect(this, &Shell::pointerFocus);
     }
 
-    for (int i = 0; i < 4; ++i) {
-        m_workspaces.push_back(new Workspace(this, i));
-    }
-
     m_fullscreenLayer.insert(&m_compositor->cursor_layer);
     m_panelsLayer.insert(&m_fullscreenLayer);
     m_limboLayer.insert(&m_panelsLayer);
     m_backgroundLayer.insert(&m_limboLayer);
 
-    Workspace *prev = nullptr;
-    for (uint32_t i = 0; i < m_workspaces.size(); ++i) {
-        Workspace *w = m_workspaces[i];
-        if (prev) {
-            w->insert(prev);
-        } else {
-            w->insert(&m_limboLayer);
-        }
-        prev = w;
+    m_pager = new Pager(this, &m_limboLayer);
+    for (int i = 0; i < 3; ++i) {
+        m_pager->addWorkspace();
     }
-
-    m_currentWorkspace = 0;
-    activateWorkspace();
 
     m_blackSurface = weston_surface_create(m_compositor);
 
@@ -144,9 +132,9 @@ void Shell::init()
                                              static_cast<Shell *>(data)->activateSurface(seat, time, button); }, this);
 
     bindKey(KEY_LEFT, MODIFIER_CTRL, [](struct wl_seat *seat, uint32_t time, uint32_t key, void *data) {
-                                            static_cast<Shell *>(data)->selectPreviousWorkspace(); }, this);
+                                            static_cast<Shell *>(data)->pager()->selectPreviousWorkspace(); }, this);
     bindKey(KEY_RIGHT, MODIFIER_CTRL, [](struct wl_seat *seat, uint32_t time, uint32_t key, void *data) {
-                                            static_cast<Shell *>(data)->selectNextWorkspace(); }, this);
+                                            static_cast<Shell *>(data)->pager()->selectNextWorkspace(); }, this);
 }
 
 void Shell::configureSurface(ShellSurface *surface, int32_t sx, int32_t sy, int32_t width, int32_t height)
@@ -403,7 +391,7 @@ ShellSurface *Shell::getShellSurface(struct wl_client *client, struct wl_resourc
         return nullptr;
     }
 
-    shsurf->init(id, currentWorkspace());
+    shsurf->init(id, pager()->currentWorkspace());
     shsurf->pingTimeoutSignal.connect(this, &Shell::pingTimeout);
 
     wl_client_add_resource(client, shsurf->wl_resource());
@@ -523,7 +511,10 @@ void Shell::panelConfigure(struct weston_surface *es, int32_t sx, int32_t sy, in
 
 void Shell::setBackgroundSurface(struct weston_surface *surface, int ws, struct weston_output *output)
 {
-    m_workspaces[ws]->setBackground(surface);
+    Workspace *w = pager()->workspace(ws);
+    if (w) {
+        w->setBackground(surface);
+    }
     surface->output = output;
 }
 
@@ -564,76 +555,6 @@ IRect2D Shell::windowsArea(struct weston_output *output) const
 struct weston_output *Shell::getDefaultOutput() const
 {
     return container_of(m_compositor->output_list.next, struct weston_output, link);
-}
-
-Workspace *Shell::currentWorkspace() const
-{
-    return m_workspaces[m_currentWorkspace];
-}
-
-Workspace *Shell::workspace(uint32_t id) const
-{
-    if (id >= m_workspaces.size()) {
-        return nullptr;
-    }
-
-    return m_workspaces[id];
-}
-
-void Shell::selectPreviousWorkspace()
-{
-    if (--m_currentWorkspace < 0) {
-        m_currentWorkspace = m_workspaces.size() - 1;
-    }
-    activateWorkspace();
-}
-
-void Shell::selectNextWorkspace()
-{
-    if (++m_currentWorkspace == (int)m_workspaces.size()) {
-        m_currentWorkspace = 0;
-    }
-    activateWorkspace();
-}
-
-void Shell::selectWorkspace(uint32_t id)
-{
-    if (id >= m_workspaces.size()) {
-        return;
-    }
-
-    m_currentWorkspace = id;
-    activateWorkspace();
-}
-
-void Shell::activateWorkspace()
-{
-    int numWs = numWorkspaces();
-    int numWsCols = ceil(sqrt(numWs));
-
-    int currWsCol = m_currentWorkspace % numWsCols;
-    int currWsRow = m_currentWorkspace / numWsCols;
-    int off_x = currWsCol * currentWorkspace()->output()->width;
-    int off_y = currWsRow * currentWorkspace()->output()->height;
-
-    for (uint i = 0; i < m_workspaces.size(); ++i) {
-        Workspace *w = m_workspaces[i];
-
-        int cws = i % numWsCols;
-        int rws = i / numWsCols;
-
-        Transform tr = w->transform();
-        tr.reset();
-        tr.translate(cws * w->output()->width - off_x, rws * w->output()->height - off_y, 0.f);
-        tr.animate(w->output(), 300);
-        w->setTransform(tr);
-
-    }
-}
-
-uint32_t Shell::numWorkspaces() const
-{
-    return m_workspaces.size();
 }
 
 void Shell::putInLimbo(ShellSurface *surf)

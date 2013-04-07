@@ -23,6 +23,7 @@
 #include "animation.h"
 #include "workspace.h"
 #include "transform.h"
+#include "pager.h"
 
 #include "wayland-desktop-shell-server-protocol.h"
 
@@ -74,7 +75,7 @@ void GridDesktops::grab_button(struct wl_pointer_grab *base, uint32_t time, uint
     ShellGrab *shgrab = container_of(base, ShellGrab, grab);
     Grab *grab = static_cast<Grab *>(shgrab);
 
-    int numWs = grab->shell->numWorkspaces();
+    int numWs = grab->shell->pager()->numWorkspaces();
     int numWsCols = ceil(sqrt(numWs));
     int numWsRows = ceil((float)numWs / (float)numWsCols);
 
@@ -98,7 +99,7 @@ void GridDesktops::grab_button(struct wl_pointer_grab *base, uint32_t time, uint
     } else {
         if (grab->surface && grab->moving) {
             grab->surface->removeTransform(grab->surfTransform);
-            Workspace *w = grab->shell->workspace(ws);
+            Workspace *w = grab->shell->pager()->workspace(ws);
             w->addSurface(grab->surface);
 
             float dx = wl_fixed_to_int(base->pointer->x + grab->dx);
@@ -145,19 +146,19 @@ void GridDesktops::run(struct weston_seat *ws)
         return;
     }
 
-    int numWs = shell()->numWorkspaces();
+    int numWs = shell()->pager()->numWorkspaces();
     int numWsCols = ceil(sqrt(numWs));
     int numWsRows = ceil((float)numWs / (float)numWsCols);
 
     if (m_scaled) {
         shell()->showPanels();
         shell()->endGrab(m_grab);
-        shell()->selectWorkspace(m_setWs);
+        shell()->pager()->selectWorkspace(m_setWs);
     } else {
         shell()->hidePanels();
         shell()->startGrab(m_grab, &grab_interface, ws, DESKTOP_SHELL_CURSOR_ARROW);
-        m_setWs = shell()->currentWorkspace()->number();
-        struct weston_output *out = shell()->currentWorkspace()->output();
+        m_setWs = shell()->pager()->currentWorkspace()->number();
+        struct weston_output *out = shell()->pager()->currentWorkspace()->output();
 
         const int margin_w = out->width / 70;
         const int margin_h = out->height / 70;
@@ -172,7 +173,7 @@ void GridDesktops::run(struct weston_seat *ws)
         m_grab->scale = rx;
 
         for (int i = 0; i < numWs; ++i) {
-            Workspace *w = shell()->workspace(i);
+            Workspace *w = shell()->pager()->workspace(i);
 
             int cws = i % numWsCols;
             int rws = i / numWsCols;

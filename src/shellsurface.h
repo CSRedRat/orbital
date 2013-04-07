@@ -53,8 +53,10 @@ public:
     void removeTransform(struct weston_transform *transform);
     void removeTransform(const Transform &transform);
     void damage();
+    void repaint();
     void setAlpha(float alpha);
     void setPosition(float x, float y);
+    void configure(float x, float y, int width, int height);
 
     inline Shell *shell() const { return m_shell; }
     inline struct wl_resource *wl_resource() { return &m_resource; }
@@ -64,8 +66,8 @@ public:
 
     inline Type type() const { return m_type; }
     bool isMapped() const;
-    int32_t x() const;
-    int32_t y() const;
+    float x() const;
+    float y() const;
     int32_t width() const;
     int32_t height() const;
     float transformedX() const;
@@ -79,6 +81,7 @@ public:
     ShellSurface *topLevelParent();
     inline Workspace *workspace() const { return m_workspace; }
     struct weston_surface *transformParent() const;
+    struct weston_compositor *compositor() const { return m_surface->compositor; }
 
     void dragMove(struct weston_seat *ws);
     void dragResize(struct weston_seat *ws, uint32_t edges);
@@ -174,10 +177,6 @@ private:
     static void shell_surface_set_title(struct wl_client *client, struct wl_resource *resource, const char *title);
     static void shell_surface_set_class(struct wl_client *client, struct wl_resource *resource, const char *className);
     static const struct wl_shell_surface_interface m_shell_surface_implementation;
-
-    static void move_grab_motion(struct wl_pointer_grab *grab, uint32_t time, wl_fixed_t x, wl_fixed_t y);
-    static void move_grab_button(struct wl_pointer_grab *grab, uint32_t time, uint32_t button, uint32_t state_w);
-    static const struct wl_pointer_grab_interface m_move_grab_interface;
 
     static void resize_grab_motion(struct wl_pointer_grab *grab, uint32_t time, wl_fixed_t x, wl_fixed_t y);
     static void resize_grab_button(struct wl_pointer_grab *grab, uint32_t time, uint32_t button, uint32_t state_w);

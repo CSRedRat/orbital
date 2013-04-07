@@ -22,6 +22,7 @@
 #include "shell.h"
 #include "animation.h"
 #include "animationcurve.h"
+#include "pager.h"
 
 #include "wayland-desktop-shell-server-protocol.h"
 
@@ -51,7 +52,7 @@ void ScaleEffect::grab_focus(struct wl_pointer_grab *base, struct wl_surface *su
     ShellGrab *shgrab = container_of(base, ShellGrab, grab);
     Grab *grab = static_cast<Grab *>(shgrab);
 
-    Workspace *currWs = grab->shell->currentWorkspace();
+    Workspace *currWs = grab->shell->pager()->currentWorkspace();
     struct weston_surface *surface = container_of(surf, struct weston_surface, surface);
     for (SurfaceTransform *tr: grab->effect->m_surfaces) {
         if (tr->surface->workspace() != currWs) {
@@ -116,7 +117,7 @@ void ScaleEffect::run(struct weston_seat *ws)
     }
 
     num = 0;
-    Workspace *currWs = shell()->currentWorkspace();
+    Workspace *currWs = shell()->pager()->currentWorkspace();
     for (SurfaceTransform *surf: m_surfaces) {
         if (surf->surface->workspace() == currWs) {
             ++num;
