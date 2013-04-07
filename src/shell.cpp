@@ -101,7 +101,8 @@ void Shell::init()
 
     m_fullscreenLayer.insert(&m_compositor->cursor_layer);
     m_panelsLayer.insert(&m_fullscreenLayer);
-    m_backgroundLayer.insert(&m_panelsLayer);
+    m_limboLayer.insert(&m_panelsLayer);
+    m_backgroundLayer.insert(&m_limboLayer);
 
     Workspace *prev = nullptr;
     for (uint32_t i = 0; i < m_workspaces.size(); ++i) {
@@ -109,7 +110,7 @@ void Shell::init()
         if (prev) {
             w->insert(prev);
         } else {
-            w->insert(&m_panelsLayer);
+            w->insert(&m_limboLayer);
         }
         prev = w;
     }
@@ -633,6 +634,11 @@ void Shell::activateWorkspace()
 uint32_t Shell::numWorkspaces() const
 {
     return m_workspaces.size();
+}
+
+void Shell::putInLimbo(ShellSurface *surf)
+{
+    m_limboLayer.addSurface(surf);
 }
 
 void Shell::pointerFocus(ShellSeat *, struct wl_pointer *pointer)

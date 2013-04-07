@@ -22,6 +22,7 @@
 #include "shellsurface.h"
 #include "shell.h"
 #include "shellseat.h"
+#include "workspace.h"
 
 #include "wayland-desktop-shell-server-protocol.h"
 
@@ -377,6 +378,7 @@ struct MoveGrab : public ShellGrab {
     struct ShellSurface *shsurf;
     struct wl_listener shsurf_destroy_listener;
     wl_fixed_t dx, dy;
+    uint32_t touchedEdgeTime;
 };
 
 void ShellSurface::move_grab_motion(struct wl_pointer_grab *grab, uint32_t time, wl_fixed_t x, wl_fixed_t y)
@@ -390,6 +392,30 @@ void ShellSurface::move_grab_motion(struct wl_pointer_grab *grab, uint32_t time,
 
     if (!shsurf)
         return;
+
+    int ptx = wl_fixed_to_int(pointer->x);
+    struct weston_output *out = shsurf->output();
+    int changeWs = 0;
+    if (ptx >= out->width - 1) {
+        changeWs = 1;
+    } else if (ptx <= 0) {
+        changeWs = -1;
+    }
+    if (changeWs != 0) {
+        if (move->touchedEdgeTime == 0) {
+            move->touchedEdgeTime = time;
+        } else if (time - move->touchedEdgeTime > 200) {
+            if (changeWs == 1) {
+                move->shell->selectNextWorkspace();
+                notify_motion(container_of(pointer->seat, struct weston_seat, seat), time, -wl_fixed_from_int(out->width - 5), 0);
+            } else {
+                move->shell->selectPreviousWorkspace();
+                notify_motion(container_of(pointer->seat, struct weston_seat, seat), time, wl_fixed_from_int(out->width - 5), 0);
+            }
+            move->touchedEdgeTime = 0;
+            return;
+        }
+    }
 
     struct weston_surface *es = shsurf->m_surface;
 
@@ -407,6 +433,7 @@ void ShellSurface::move_grab_button(struct wl_pointer_grab *grab, uint32_t time,
 
     if (pointer->button_count == 0 && state == WL_POINTER_BUTTON_STATE_RELEASED) {
         Shell::endGrab(shell_grab);
+        move->shell->currentWorkspace()->addSurface(move->shsurf);
         move->shsurf->moveEndSignal(move->shsurf);
         delete shell_grab;
     }
@@ -443,8 +470,11 @@ void ShellSurface::dragMove(struct weston_seat *ws)
     move->dy = wl_fixed_from_double(m_surface->geometry.y) - ws->seat.pointer->grab_y;
     move->shsurf = this;
     move->grab.focus = &m_surface->surface;
+    move->touchedEdgeTime = 0;
 
     m_shell->startGrab(move, &m_move_grab_interface, ws, DESKTOP_SHELL_CURSOR_MOVE);
+    shell()->currentWorkspace()->removeSurface(this);
+    shell()->putInLimbo(this);
     moveStartSignal(this);
 }
 

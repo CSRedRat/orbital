@@ -52,6 +52,14 @@ void Workspace::addSurface(ShellSurface *surface)
     m_layer.addSurface(surface);
 }
 
+void Workspace::removeSurface(ShellSurface *surface)
+{
+    if (surface->transformParent() == m_rootSurface) {
+        weston_surface_set_transform_parent(surface->m_surface, nullptr);
+    }
+    wl_list_remove(&surface->m_surface->layer_link);
+}
+
 void Workspace::restack(ShellSurface *surface)
 {
     m_layer.restack(surface);

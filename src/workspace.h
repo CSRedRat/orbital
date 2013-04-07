@@ -29,6 +29,7 @@ public:
     ~Workspace();
 
     void addSurface(ShellSurface *surface);
+    void removeSurface(ShellSurface *surface);
     void restack(ShellSurface *surface);
     void stackAbove(struct weston_surface *surf, struct weston_surface *parent);
 

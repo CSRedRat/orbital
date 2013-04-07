@@ -103,6 +103,8 @@ public:
     void selectWorkspace(uint32_t id);
     uint32_t numWorkspaces() const;
 
+    void putInLimbo(ShellSurface *surface);
+
 protected:
     Shell(struct weston_compositor *ec);
     virtual void init();
@@ -140,6 +142,7 @@ private:
 
     struct weston_compositor *m_compositor;
     Layer m_backgroundLayer;
+    Layer m_limboLayer;
     Layer m_panelsLayer;
     Layer m_fullscreenLayer;
     std::vector<Effect *> m_effects;
