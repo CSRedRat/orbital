@@ -103,7 +103,7 @@ void GridDesktops::grab_button(struct wl_pointer_grab *base, uint32_t time, uint
 
             float dx = wl_fixed_to_int(base->pointer->x + grab->dx);
             float dy = wl_fixed_to_int(base->pointer->y + grab->dy);
-            grab->surface->setPosition((dx - w->x()) / grab->scale , (dy - w->y()) / grab->scale);
+            grab->surface->setPosition((int)((dx - w->x()) / grab->scale) , (int)((dy - w->y()) / grab->scale));
         } else {
             grab->effect->m_setWs = ws;
             grab->effect->run(grab->effect->m_seat);
