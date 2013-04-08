@@ -88,6 +88,7 @@ public:
     void startGrab(ShellGrab *grab, const struct wl_pointer_grab_interface *interface,
                    struct weston_seat *seat, uint32_t cursor);
     static void endGrab(ShellGrab *grab);
+    void setGrabCursor(ShellGrab *grab, uint32_t cursor);
 
     void showPanels();
     void hidePanels();

@@ -476,6 +476,13 @@ void Shell::startGrab(ShellGrab *grab, const struct wl_pointer_grab_interface *i
     wl_pointer_set_focus(pointer, &m_grabSurface->surface, wl_fixed_from_int(0), wl_fixed_from_int(0));
 }
 
+void Shell::setGrabCursor(ShellGrab *grab, uint32_t cursor)
+{
+    wl_pointer_set_focus(grab->pointer, nullptr, wl_fixed_from_int(0), wl_fixed_from_int(0));
+    setGrabCursor(cursor);
+    wl_pointer_set_focus(grab->pointer, &m_grabSurface->surface, wl_fixed_from_int(0), wl_fixed_from_int(0));
+}
+
 void Shell::endGrab(ShellGrab *grab)
 {
 //     if (grab->shsurf)
