@@ -64,6 +64,7 @@ static void grab_motion(struct wl_pointer_grab *base, uint32_t time, wl_fixed_t 
 
             grab->surface->setPosition(grab->surface->transformedX(), grab->surface->transformedY());
             grab->surface->addTransform(grab->surfTransform);
+            grab->surface->moveStartSignal(grab->surface);
         }
 
         grab->surface->setPosition(pos_x, pos_y);
@@ -105,6 +106,7 @@ void GridDesktops::grab_button(struct wl_pointer_grab *base, uint32_t time, uint
             float dx = wl_fixed_to_int(base->pointer->x + grab->dx);
             float dy = wl_fixed_to_int(base->pointer->y + grab->dy);
             grab->surface->setPosition((int)((dx - w->x()) / grab->scale) , (int)((dy - w->y()) / grab->scale));
+            grab->surface->moveEndSignal(grab->surface);
         } else {
             grab->effect->m_setWs = ws;
             grab->effect->run(grab->effect->m_seat);
