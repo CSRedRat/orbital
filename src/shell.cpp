@@ -649,7 +649,7 @@ void Shell::sigchld(int status)
 
 void Shell::launchShellProcess()
 {
-    const char *shell_exe = "./client/orbital-shell-client";
+    const char *shell_exe = CLIENT_DIR "/orbital-shell-client";
 
     m_child.client = weston_client_launch(m_compositor,
                                           &m_child.process,
