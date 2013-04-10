@@ -44,9 +44,6 @@
 
 #include "wayland-desktop-shell-client-protocol.h"
 
-#define DATADIR "/usr/local/share/weston"
-#define BINDIR "/usr/local/bin"
-
 extern char **environ; /* defined by libc */
 
 struct desktop {
@@ -118,7 +115,7 @@ struct unlock_dialog {
 	struct desktop *desktop;
 };
 
-static char *key_background_image = DATADIR "/weston/pattern.png";
+static char *key_background_image = WESTON_DATADIR "/weston/pattern.png";
 static char *key_background_type = "tile";
 static uint32_t key_panel_color = 0xaa000000;
 static uint32_t key_background_color = 0xff002244;
@@ -1083,8 +1080,8 @@ add_default_launcher(struct desktop *desktop)
 
 	wl_list_for_each(output, &desktop->outputs, link)
 		panel_add_launcher(output->panel,
-				   DATADIR "/weston/terminal.png",
-				   BINDIR "/weston-terminal");
+				   WESTON_DATADIR "/weston/terminal.png",
+				   WESTON_BINDIR "/weston-terminal");
 }
 
 int main(int argc, char *argv[])

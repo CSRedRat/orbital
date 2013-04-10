@@ -1,6 +1,9 @@
 
 find_package(Cairo)
 
+add_definitions(-DWESTON_DATADIR="${WESTON_PREFIX}/share/weston")
+add_definitions(-DWESTON_BINDIR="${WESTON_PREFIX}/bin")
+
 include_directories(${CAIRO_INCLUDE_DIRS})
 
 set(SOURCES

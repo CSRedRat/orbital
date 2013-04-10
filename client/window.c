@@ -72,8 +72,6 @@ typedef void *EGLContext;
 
 #include "window.h"
 
-#define DATADIR "/usr/local/share/weston"
-
 struct shm_pool;
 
 struct global {
@@ -2273,16 +2271,16 @@ frame_create(struct window *window, void *data)
 	/* Create empty list for frame buttons */
 	wl_list_init(&frame->buttons_list);
 
-	frame_button_create(frame, DATADIR "/weston/icon_window.png",
+	frame_button_create(frame, WESTON_DATADIR "/weston/icon_window.png",
 		FRAME_BUTTON_ICON, FRAME_BUTTON_LEFT, FRAME_BUTTON_NONE);
 
-	frame_button_create(frame, DATADIR "/weston/sign_close.png",
+	frame_button_create(frame, WESTON_DATADIR "/weston/sign_close.png",
 		FRAME_BUTTON_CLOSE, FRAME_BUTTON_RIGHT, FRAME_BUTTON_FANCY);
 
-	frame_button_create(frame, DATADIR "/weston/sign_maximize.png",
+	frame_button_create(frame, WESTON_DATADIR "/weston/sign_maximize.png",
 		FRAME_BUTTON_MAXIMIZE, FRAME_BUTTON_RIGHT, FRAME_BUTTON_FANCY);
 
-	frame_button_create(frame, DATADIR "/weston/sign_minimize.png",
+	frame_button_create(frame, WESTON_DATADIR "/weston/sign_minimize.png",
 		FRAME_BUTTON_MINIMIZE, FRAME_BUTTON_RIGHT, FRAME_BUTTON_FANCY);
 
 	window->frame = frame;
