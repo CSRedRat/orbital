@@ -19,10 +19,11 @@
 #include "workspace.h"
 #include "shell.h"
 #include "shellsurface.h"
+#include "animationcurve.h"
 
 #include "wayland-desktop-shell-server-protocol.h"
 
-static const int SLIDE_DURATION = 300;
+static const int SLIDE_DURATION = 500;
 
 Pager::Pager(Shell *shell, Layer *layer)
      : m_shell(shell)
@@ -106,6 +107,7 @@ void Pager::activateWorkspace()
         Transform tr = w->transform();
         tr.reset();
         tr.translate(cws * w->output()->width - off_x, rws * w->output()->height - off_y, 0.f);
+        tr.setAnimationCurve(PulseCurve());
         tr.animate(w->output(), SLIDE_DURATION);
         w->setTransform(tr);
 

@@ -21,9 +21,9 @@
 #include <weston/compositor.h>
 
 #include "signal.h"
+#include "animationcurve.h"
 
 class ShellSurface;
-class AnimationCurve;
 
 class Animation {
 public:
@@ -40,8 +40,7 @@ public:
     void run(struct weston_output *output, uint32_t duration, Flags flags = Flags::None);
     void stop();
     bool isRunning() const;
-    template<class T>
-    void setCurve(const T &curve) { delete m_curve; m_curve = new T; *static_cast<T *>(m_curve) = curve; }
+    void setCurve(const AnimationCurve &curve) { m_curve = curve.function(); }
 
     Animation &operator=(const Animation &ani);
 
@@ -61,7 +60,7 @@ private:
     uint32_t m_duration;
     uint32_t m_timestamp;
     Flags m_runFlags;
-    AnimationCurve *m_curve;
+    AnimationCurve::Function m_curve;
     struct weston_output *m_output;
 };
 

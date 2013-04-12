@@ -33,6 +33,7 @@ public:
 
     void apply();
     void animate(struct weston_output *output, uint32_t duration);
+    void setAnimationCurve(const AnimationCurve &c) { m_animation.setCurve(c); }
 
     void currentTranslation(float *x, float *y = nullptr, float *z = nullptr) const;
     void currentScale(float *x, float *y = nullptr, float *z = nullptr) const;

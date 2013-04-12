@@ -19,13 +19,13 @@
 #define ANIMATIONCURVE_H
 
 #include <stdio.h>
+#include <functional>
 
 class AnimationCurve {
 public:
-    AnimationCurve() {}
-    virtual ~AnimationCurve() {}
+    typedef std::function<float (float)> Function;
 
-    virtual float value(float progress) = 0;
+    virtual Function function() const = 0;
 };
 
 // These curves are taken from Qt's QEasingCurve.
@@ -68,14 +68,15 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class InQuadCurve : public AnimationCurve {
 public:
-    virtual float value(float f) override {
+    static float value(float f) {
         return f * f;
     }
+    virtual Function function() const override { return value; }
 };
 
 class InOutQuadCurve : public AnimationCurve {
 public:
-    virtual float value(float f) override {
+    static float value(float f) {
         f *= 2.f;
         if (f < 1.f) {
             return f * f/ 2.f;
@@ -98,18 +99,17 @@ protected:
 
 class OutBackCurve : public BackCurve {
 public:
-    virtual float value(float t) override {
-        float s = m_overshoot;
+    static float value(float t, float s) {
         t -= 1.f;
         return t*t*((s+1)*t+ s) + 1;
     }
+    virtual Function function() const override {  return std::bind(value, std::placeholders::_1, m_overshoot); }
 };
 
 
 class InOutBackCurve : public BackCurve {
 public:
-    virtual float value(float t) override {
-        float s = m_overshoot;
+    static float value(float t, float s) {
         t *= 2.0;
         if (t < 1) {
             s *= 1.525f;
@@ -120,11 +120,12 @@ public:
             return 0.5*(t*t*((s+1)*t+ s) + 2);
         }
     }
+    virtual Function function() const override {  return std::bind(value, std::placeholders::_1, m_overshoot); }
 };
 
 class OutBounceCurve : public AnimationCurve {
 public:
-    virtual float value(float t) override {
+    static float value(float t) {
         float c = 1.f;
         float a = 0.5f;
         if (t < (4/11.0)) {
@@ -140,6 +141,7 @@ public:
             return -a * (1. - (7.5625*t*t + .984375)) + c;
         }
     }
+    virtual Function function() const override { return value; }
 };
 
 class ElasticCurve : public AnimationCurve {
@@ -155,20 +157,21 @@ protected:
 
 class OutElasticCurve : public ElasticCurve {
 public:
-    virtual float value(float t) override {
+    static float value(float t, float a, float p) {
         if (t == 0.f) return 0.f;
         if (t == 1.f) return 1.f;
 
-        float a = m_amplitude;
         float s;
-        if(m_amplitude < 1.f) {
+        if(a < 1.f) {
             a = 1.f;
-            s = m_period / 4.0f;
+            s = p / 4.0f;
         } else {
-            s = m_period / (2.f * M_PI) * asin(1.f / a);
+            s = p / (2.f * M_PI) * asin(1.f / a);
         }
-        return (a * pow(2.0f, -10 * t) * sin((t - s) * (2 * M_PI) / m_period) + 1.f);
+        return (a * pow(2.0f, -10 * t) * sin((t - s) * (2 * M_PI) / p) + 1.f);
     }
+
+    virtual Function function() const { return std::bind(value, std::placeholders::_1, m_amplitude, m_period); }
 };
 
 
@@ -176,19 +179,20 @@ public:
 
 class PulseCurve : public AnimationCurve {
 public:
-    PulseCurve() { m_pulseNormalize = 1.f; m_pulseNormalize = 1.f / pulse(1); }
+    PulseCurve() { m_pulseNormalize = 1.f / pulse(1.f, 1.f); }
 
     // viscous fluid with a pulse for part and decay for the rest
-    virtual float value(float x) override {
+    static float value(float x, float n) {
         if (x >= 1) return 1;
         if (x <= 0) return 0;
 
-        return pulse(x);
+        return pulse(x, n);
     }
+    virtual Function function() const override {  return std::bind(value, std::placeholders::_1, m_pulseNormalize); }
 
 private:
     // viscous fluid with a pulse for part and decay for the rest
-    float pulse(float x)
+    static float pulse(float x, float normalize)
     {
         const float pulseScale = 8; // ratio of "tail" to "acceleration"
         float val;
@@ -207,7 +211,7 @@ private:
             val = start + (expx * (1.0 - start));
         }
 
-        return val * m_pulseNormalize;
+        return val * normalize;
     }
 
     float m_pulseNormalize;

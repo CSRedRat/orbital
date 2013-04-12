@@ -52,6 +52,7 @@ Animation &Animation::operator=(const Animation &ani)
     m_runFlags = ani.m_runFlags;
     m_output = ani.m_output;
     m_animation.ani = ani.m_animation.ani;
+    m_curve = ani.m_curve;
 
     if (ani.isRunning()) {
         wl_list_insert(&m_output->animation_list, &m_animation.ani.link);
@@ -117,7 +118,7 @@ void Animation::update(struct weston_output *output, uint32_t msecs)
 
     float f = (float)time / (float)m_duration;
     if (m_curve) {
-        f = m_curve->value(f);
+        f = m_curve(f);
     }
     updateSignal(m_target * f + m_start * (1.f - f));
 
