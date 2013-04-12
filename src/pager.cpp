@@ -38,6 +38,11 @@ uint32_t Pager::addWorkspace()
     Workspace *ws = new Workspace(m_shell, m_workspaces.size());
     m_workspaces.push_back(ws);
     ws->insert(m_parentLayer);
+
+    Transform tr = ws->transform();
+    tr.setAnimationCurve(PulseCurve());
+    ws->setTransform(tr);
+
     activateWorkspace();
 
     return ws->number();
@@ -107,7 +112,6 @@ void Pager::activateWorkspace()
         Transform tr = w->transform();
         tr.reset();
         tr.translate(cws * w->output()->width - off_x, rws * w->output()->height - off_y, 0.f);
-        tr.setAnimationCurve(PulseCurve());
         tr.animate(w->output(), SLIDE_DURATION);
         w->setTransform(tr);
 
